@@ -109,7 +109,7 @@ class SandboxShellTool(Tool):
         self._tool: FunctionTool = tool(
             run_shell_command,
             name=name,
-            description=_description(description, adapter.restricted).format(workdir=adapter.workdir),
+            description=_description(description, adapter.restricted).replace("{workdir}", str(adapter.workdir)),
             middleware=middleware,
         )
         self.name = name

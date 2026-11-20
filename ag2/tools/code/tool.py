@@ -108,7 +108,7 @@ class SandboxCodeTool(Tool):
         self._tool: FunctionTool = tool(
             run_code,
             name=name,
-            description=description.format(languages=", ".join(env.supported_languages)),
+            description=description.replace("{languages}", ", ".join(env.supported_languages)),
             middleware=middleware,
         )
         self.name = name
