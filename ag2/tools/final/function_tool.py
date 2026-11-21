@@ -229,17 +229,20 @@ def tool(
             sync_to_thread=sync_to_thread,
             serialize_result=False,
         )
+        inferred_name = getattr(f, "__name__", None)
+        if not isinstance(inferred_name, str):
+            inferred_name = type(f).__name__
 
         return FunctionTool(
             call_model,
-            name=name or f.__name__,
+            name=name or inferred_name,
             description=description or f.__doc__ or "",
             schema=_normalize_parameters(schema, call_model),
             timeout=timeout,
             middleware=middleware,
         )
 
-    if function:
+    if function is not None:
         return make_tool(function)
     return make_tool
 
