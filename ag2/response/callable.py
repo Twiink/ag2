@@ -97,7 +97,10 @@ def response_schema(
     embed: bool = True,
 ) -> Callable[[ResponseHook[T]], CallableResponse[T]] | CallableResponse[T]:
     def make_callable_schema(f: ResponseHook[T]) -> CallableResponse[T]:
-        final_name = name or f.__name__
+        inferred_name = getattr(f, "__name__", None)
+        if not isinstance(inferred_name, str):
+            inferred_name = type(f).__name__
+        final_name = name or inferred_name
 
         validator, response_schema = _unwrap_message_to_fast_depends_decorator(
             f,
