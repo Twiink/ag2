@@ -9,9 +9,10 @@ import pytest
 from dirty_equals import IsPartialDict
 from pydantic import Field
 
-from ag2 import Context, Depends, Variable
+from ag2 import Agent, Context, Depends, Variable
 from ag2.response import response_schema
 from ag2.stream import MemoryStream
+from ag2.testing import TestConfig
 
 
 class TestNameDescription:
@@ -447,3 +448,31 @@ class TestDependencyInjection:
         )
 
         assert result == "Alice(30) [fr]"
+
+
+class NormalizeAnswer:
+    def __call__(self, content: str) -> str:
+        return content.strip().upper()
+
+
+class AsyncNormalizeAnswer:
+    async def __call__(self, content: str) -> str:
+        return content.strip().upper()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("callback_type", [NormalizeAnswer, AsyncNormalizeAnswer])
+@pytest.mark.parametrize("name", [None, "normalize"])
+@pytest.mark.parametrize("sync_to_thread", [True, False])
+async def test_callable_instance_response(
+    callback_type: type[NormalizeAnswer] | type[AsyncNormalizeAnswer],
+    name: str | None,
+    sync_to_thread: bool,
+) -> None:
+    schema = response_schema(callback_type(), name=name, sync_to_thread=sync_to_thread)
+    agent = Agent("normalizer", config=TestConfig(" hello "), response_schema=schema)
+
+    reply = await agent.ask("Normalize the answer.")
+
+    assert schema.name == (name or callback_type.__name__)
+    assert await reply.content() == "HELLO"
